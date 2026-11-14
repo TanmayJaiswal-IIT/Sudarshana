@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from typing import Iterable
 
@@ -39,6 +40,35 @@ def summarize(labels: list[int], predictions: list[int]) -> dict[str, float | in
         "fpr": _rate(counts["fp"], counts["fp"] + counts["tn"]),
         "precision": _rate(counts["tp"], counts["tp"] + counts["fp"]),
     }
+
+
+def threshold_at_recall(
+    probabilities: list[float],
+    labels: list[int],
+    target: float,
+) -> float | None:
+    """Highest threshold whose recall on the positives is at least ``target``.
+
+    Scores equal to the threshold count as positive, so a tie can only raise
+    recall. No positives returns None.
+    """
+    if not 0 < target <= 1:
+        raise ValueError("target recall must be in (0, 1]")
+    if len(probabilities) != len(labels):
+        raise ValueError("probabilities and labels must have the same length")
+    positive = sorted(
+        float(probability)
+        for probability, label in zip(probabilities, labels, strict=True)
+        if int(label) == 1
+    )
+    if not positive:
+        return None
+    needed = math.ceil(target * len(positive))
+    return positive[len(positive) - needed]
+
+
+def predictions_at_threshold(probabilities: list[float], threshold: float) -> list[int]:
+    return [1 if probability >= threshold else 0 for probability in probabilities]
 
 
 def negative_fpr(rows: list[dict], predictions: list[int], predicate) -> dict[str, float | int | None]:

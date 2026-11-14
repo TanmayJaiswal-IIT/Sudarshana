@@ -189,10 +189,30 @@ def validate_example(row: dict[str, Any]) -> None:
         previous_end = end
 
 
+SIBLING_SUFFIXES = ("::counterfactual", "::mismatched_task")
+
+
 def validate_split(rows: list[dict[str, Any]]) -> None:
-    """Reject example-level leakage of attack types and BIPIA test documents."""
+    """Reject example-level leakage of attack types and BIPIA test documents.
+
+    A counterfactual or mismatched sibling must keep its parent's split and
+    document, so a test attack string cannot move into train.
+    """
     for row in rows:
         validate_example(row)
+
+    by_id = {row["id"]: row for row in rows}
+    for row in rows:
+        suffix = next((item for item in SIBLING_SUFFIXES if row["id"].endswith(item)), None)
+        if suffix is None:
+            continue
+        parent = by_id.get(row["id"][: -len(suffix)])
+        if (
+            parent is None
+            or parent["split"] != row["split"]
+            or parent["document"] != row["document"]
+        ):
+            raise ValueError(f"sibling {row['id']} must keep the parent split and document")
 
     by_attack: dict[str, set[str]] = {}
     bipia_groups: dict[str, set[str]] = {}

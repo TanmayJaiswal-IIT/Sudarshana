@@ -12,6 +12,7 @@ from typing import Any
 
 import yaml
 
+from sudarshana.data.counterfactuals import attach_counterfactuals
 from sudarshana.data.io import write_jsonl
 from sudarshana.data.schema import SCHEMA_VERSION, UNIFIED_FIELDS, validate_split
 from sudarshana.data.sources.agentdojo import load_agentdojo
@@ -42,6 +43,7 @@ def build_from_config(config: dict[str, Any], config_path: Path) -> dict[str, An
     agent_cfg = config.get("agentdojo") or {}
     trust_cfg = config.get("tensortrust") or {}
     hard_cfg = config.get("hard_negatives") or {}
+    pair_cfg = config.get("counterfactuals") or {}
     tasks = list(bipia_cfg.get("tasks") or ["email", "table", "code"])
     positions = tuple(bipia_cfg.get("positions") or POSITIONS)
 
@@ -90,6 +92,13 @@ def build_from_config(config: dict[str, Any], config_path: Path) -> dict[str, An
         hard_negative_val_fraction=float(hard_cfg.get("val_fraction", 0.15)),
     )
     rows = [example.to_dict() for example in examples]
+    flip_categories = pair_cfg.get("flip_categories")
+    rows, pair_counts = attach_counterfactuals(
+        rows,
+        enabled=bool(pair_cfg.get("enabled", True)),
+        flip_categories=None if flip_categories is None else list(flip_categories),
+        mismatched_hard_negatives=bool(pair_cfg.get("mismatched_hard_negatives", True)),
+    )
     validate_split(rows)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -114,9 +123,11 @@ def build_from_config(config: dict[str, Any], config_path: Path) -> dict[str, An
             "AgentDojo suite 'travel' is test. injection_task_0 is val elsewhere. "
             "TensorTrust prompt_extraction is test. A sorted tail of hijack defenses is val. "
             "Hard-negative category 'shell' is test. A sorted tail of the other "
-            "hard-negative documents is val."
+            "hard-negative documents is val. Counterfactual siblings keep the "
+            "parent document and split."
         ),
         "seed": seed,
+        "counterfactuals": pair_counts,
         "hard_negative_provenance": hard_provenance,
         "report": report,
     }

@@ -1,0 +1,8 @@
+# Day 3: FPR at a validation threshold set for 95% recall.
+# Document-only ignores the user task. Pair text is user_task, a newline, then document.
+data_dir: data/processed
+target_recall: 0.95
+max_tokens: 512
+seed: 2023
+output: data/processed/fixed_recall_metrics.json
+record: results/fixed_recall_day3.json

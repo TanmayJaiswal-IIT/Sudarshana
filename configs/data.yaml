@@ -31,3 +31,8 @@ hard_negatives:
   max_per_category: 400
   held_out_category: shell
   val_fraction: 0.15
+
+counterfactuals:
+  enabled: true
+  flip_categories: [task_irrelevant, code, agent_injection, prompt_hijack, prompt_extraction]
+  mismatched_hard_negatives: true
