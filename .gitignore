@@ -4,11 +4,16 @@ Prompt injection project.pdf
 
 # Downloaded benchmarks and generated splits.
 data/raw/
+data/raw_bipia/
 data/processed/
+
+# Checkpoint model weights
+checkpoints/**/*.bin
 
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 .venv/
 .pytest_cache/
 *.egg-info/

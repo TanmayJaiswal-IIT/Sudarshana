@@ -1,1 +1,1 @@
-"""Detector metrics and the Day-1 truncated baseline."""
+"""Evaluation metrics, span F1, residual payload evaluation, detector metrics, and baselines."""

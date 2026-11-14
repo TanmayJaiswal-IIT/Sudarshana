@@ -1,0 +1,32 @@
+{
+  "prototype": true,
+  "notice": "This is a prototype checkpoint for head and redaction validation. P3 owns the final joint training run.",
+  "backbone": "microsoft/deberta-v3-xsmall",
+  "seed": 42,
+  "epochs": 3,
+  "learning_rate": 3e-05,
+  "batch_size": 8,
+  "include_hard_negatives": true,
+  "total_duration_sec": 718.98,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.7294,
+      "val_loss": 0.1685,
+      "time_sec": 243.57
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.1036,
+      "val_loss": 0.076,
+      "time_sec": 231.45
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.036,
+      "val_loss": 0.054,
+      "time_sec": 243.96
+    }
+  ],
+  "timestamp": "2026-11-10 23:33:15"
+}
