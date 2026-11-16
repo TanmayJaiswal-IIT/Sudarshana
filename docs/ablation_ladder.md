@@ -33,4 +33,13 @@ Each rung is the previous rung plus one change. A rung is `OK` only when its com
 python -m sudarshana.evaluation.ablation --config configs/ablation_ladder.yaml
 ```
 
-Writes `results/calibration_day6.json` and `results/ablation_ladder.json`.
+Writes `results/calibration_day6.json` and `results/ablation_ladder.json`. That config reads the prototype files in `data/splits` (test n=206).
+
+The authoritative split is `data/processed`. Rebuild the obfuscated set from its test file, then calibrate and coordinate the ladder there:
+
+```bash
+python -m sudarshana.data.build_obfuscated --config configs/obfuscated_full.yaml
+python -m sudarshana.evaluation.ablation --config configs/ablation_full.yaml
+```
+
+`primary_only` drops rows whose id contains `::` (counterfactual and mismatched siblings). Held-out hard negatives are the test rows with source `hard_negative` when `hard_negatives.jsonl` is absent. Writes `results/calibration_full.json` and `results/ablation_ladder_full.json`.

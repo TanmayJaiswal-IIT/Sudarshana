@@ -444,7 +444,7 @@ See `results/p5/latency.json` and `reports/figures/latency_p50_p95.png`.
 |------|--------|-------|------|
 | Trained token-head weights | BLOCKED | P4 | Needed for token_head, span-F1, real PSR |
 | Real LLM ASR | N/A | All | No LLM endpoint; PSR proxy used |
-| Full splits re-eval | OPEN | P1/P2 | team baseline n=42999 vs P5 n=206 |
+| Full splits re-eval | RESOLVED | P1 | lexical 5% FPR on primary test n=42999; reports/p1_full_split.md |
 | token_head re-eval | BLOCKED | P4 | weights absent in repo |
 
 ---

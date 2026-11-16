@@ -1,0 +1,400 @@
+{
+  "schema_version": "1.1",
+  "target_fpr": 0.05,
+  "target_recall_reference": 0.95,
+  "seed": 2023,
+  "max_tokens": 512,
+  "calibration_split": "val",
+  "redaction_threshold": 0.35,
+  "redaction_threshold_note": "Token-span cutoff from configs/prototype_config.yaml. Not overwritten by the detection false-positive threshold.",
+  "git_head": "cb909104feca756e4bcfa1299246f76a495221de",
+  "row_counts": {
+    "train": 244107,
+    "val": 60639,
+    "test": 62859,
+    "hard_negatives": 400,
+    "obfuscated": 210839
+  },
+  "arms": {
+    "document": {
+      "model": "truncated-lexical",
+      "score": "truncated lexical log-odds, before the sigmoid. The sigmoid maps large positive log-odds to exactly 1 and collapses distinct documents.",
+      "input": "document",
+      "uses_user_task": false,
+      "max_tokens": 512,
+      "n_train": 179820,
+      "target_fpr": 0.05,
+      "threshold": 117.01904070715975,
+      "tight": true,
+      "reason": null,
+      "n_primary": 44729,
+      "n_excluded": 15910,
+      "val": {
+        "threshold": 117.01904070715975,
+        "recall": 0.0229,
+        "fpr": 0.0495,
+        "fp": 16,
+        "negatives": 323,
+        "tp": 1017,
+        "positives": 44406,
+        "fpr_ci": [
+          0.0307,
+          0.0789
+        ],
+        "recall_ci": [
+          0.0216,
+          0.0243
+        ],
+        "tight": true
+      },
+      "recall_reference": {
+        "threshold": 29.706948820245575,
+        "recall": 0.95,
+        "fpr": 0.5882,
+        "fp": 190,
+        "negatives": 323,
+        "tp": 42187,
+        "positives": 44406,
+        "fpr_ci": [
+          0.5338,
+          0.6406
+        ],
+        "recall_ci": [
+          0.948,
+          0.952
+        ],
+        "target_recall": 0.95
+      },
+      "test": {
+        "threshold": 117.01904070715975,
+        "recall": 0.0,
+        "fpr": 0.0,
+        "fp": 0,
+        "negatives": 1039,
+        "tp": 0,
+        "positives": 41960,
+        "fpr_ci": [
+          0.0,
+          0.0037
+        ],
+        "recall_ci": [
+          0.0,
+          0.0001
+        ],
+        "rows": 42999
+      },
+      "hard_negatives": {
+        "threshold": 117.01904070715975,
+        "recall": null,
+        "fpr": 0.0,
+        "fp": 0,
+        "negatives": 400,
+        "tp": 0,
+        "positives": 0,
+        "fpr_ci": [
+          0.0,
+          0.0095
+        ],
+        "recall_ci": [
+          0.0,
+          1.0
+        ],
+        "rows": 400
+      },
+      "obfuscated": {
+        "status": "OK",
+        "missing_parents": 0,
+        "by_family": {
+          "base64": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "hex": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "leetspeak": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "zero_width": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "homoglyph": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          }
+        },
+        "clean": {
+          "threshold": 117.01904070715975,
+          "recall": null,
+          "fpr": 0.0,
+          "fp": 0,
+          "negatives": 1039,
+          "tp": 0,
+          "positives": 0,
+          "fpr_ci": [
+            0.0,
+            0.0037
+          ],
+          "recall_ci": [
+            0.0,
+            1.0
+          ],
+          "rows": 1039
+        }
+      }
+    },
+    "pair": {
+      "model": "truncated-lexical",
+      "score": "truncated lexical log-odds, before the sigmoid. The sigmoid maps large positive log-odds to exactly 1 and collapses distinct documents.",
+      "input": "user_task_then_document",
+      "uses_user_task": true,
+      "max_tokens": 512,
+      "n_train": 179820,
+      "target_fpr": 0.05,
+      "threshold": 95.46412379403974,
+      "tight": true,
+      "reason": null,
+      "n_primary": 44729,
+      "n_excluded": 15910,
+      "val": {
+        "threshold": 95.46412379403974,
+        "recall": 0.0178,
+        "fpr": 0.0495,
+        "fp": 16,
+        "negatives": 323,
+        "tp": 792,
+        "positives": 44406,
+        "fpr_ci": [
+          0.0307,
+          0.0789
+        ],
+        "recall_ci": [
+          0.0166,
+          0.0191
+        ],
+        "tight": true
+      },
+      "recall_reference": {
+        "threshold": 5.19402511177734,
+        "recall": 0.95,
+        "fpr": 0.6068,
+        "fp": 196,
+        "negatives": 323,
+        "tp": 42186,
+        "positives": 44406,
+        "fpr_ci": [
+          0.5526,
+          0.6585
+        ],
+        "recall_ci": [
+          0.9479,
+          0.952
+        ],
+        "target_recall": 0.95
+      },
+      "test": {
+        "threshold": 95.46412379403974,
+        "recall": 0.0,
+        "fpr": 0.0,
+        "fp": 0,
+        "negatives": 1039,
+        "tp": 0,
+        "positives": 41960,
+        "fpr_ci": [
+          0.0,
+          0.0037
+        ],
+        "recall_ci": [
+          0.0,
+          0.0001
+        ],
+        "rows": 42999
+      },
+      "hard_negatives": {
+        "threshold": 95.46412379403974,
+        "recall": null,
+        "fpr": 0.0,
+        "fp": 0,
+        "negatives": 400,
+        "tp": 0,
+        "positives": 0,
+        "fpr_ci": [
+          0.0,
+          0.0095
+        ],
+        "recall_ci": [
+          0.0,
+          1.0
+        ],
+        "rows": 400
+      },
+      "obfuscated": {
+        "status": "OK",
+        "missing_parents": 0,
+        "by_family": {
+          "base64": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "hex": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "leetspeak": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "zero_width": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          },
+          "homoglyph": {
+            "n": 41960,
+            "parent_hits": 0,
+            "child_hits": 0,
+            "parent_recall": 0.0,
+            "child_recall": 0.0,
+            "recall_delta": 0.0,
+            "parent_ci": [
+              0.0,
+              0.0001
+            ],
+            "child_ci": [
+              0.0,
+              0.0001
+            ]
+          }
+        },
+        "clean": {
+          "threshold": 95.46412379403974,
+          "recall": null,
+          "fpr": 0.0,
+          "fp": 0,
+          "negatives": 1039,
+          "tp": 0,
+          "positives": 0,
+          "fpr_ci": [
+            0.0,
+            0.0037
+          ],
+          "recall_ci": [
+            0.0,
+            1.0
+          ],
+          "rows": 1039
+        }
+      }
+    }
+  }
+}

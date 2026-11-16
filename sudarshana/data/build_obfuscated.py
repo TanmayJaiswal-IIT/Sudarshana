@@ -9,14 +9,15 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 import yaml
 
-from sudarshana.data.io import read_jsonl, write_jsonl
-from sudarshana.data.obfuscated_validate import validate_obfuscated_split
+from sudarshana.data.io import iter_jsonl
+from sudarshana.data.obfuscated_validate import ObfuscatedChecker, leakage_sets
 from sudarshana.data.obfuscation import (
     CLEAN_FAMILY,
     EVAL_FAMILIES,
@@ -86,14 +87,24 @@ def _child(parent: dict[str, Any], index: int, digest: str, family: str) -> dict
     return child
 
 
-def derive_rows(parents: list[dict[str, Any]], families: list[str]) -> list[dict[str, Any]]:
+def select_parents(rows: list[dict[str, Any]], *, primary_only: bool) -> list[dict[str, Any]]:
+    """Drop counterfactual and mismatched siblings when ``primary_only`` is set.
+
+    Those ids contain ``::``. Their documents still hold the attack text while
+    the label is 0, so they are not clean controls and not extra attacks.
+    """
+    if not primary_only:
+        return list(rows)
+    return [row for row in rows if "::" not in str(row.get("id") or "")]
+
+
+def iter_derived(parents: list[dict[str, Any]], families: list[str]) -> Iterator[dict[str, Any]]:
     """One clean copy per label-0 parent, and one child per family for label 1."""
-    rows: list[dict[str, Any]] = []
     for index, parent in enumerate(parents):
         digest = canonical_sha256(parent)
         label = int(parent["label"])
         if label == 0:
-            rows.append(_child(parent, index, digest, CLEAN_FAMILY))
+            yield _child(parent, index, digest, CLEAN_FAMILY)
             continue
         if label != 1:
             raise ValueError(f"parent {index} has label {parent['label']!r}")
@@ -106,8 +117,12 @@ def derive_rows(parents: list[dict[str, Any]], families: list[str]) -> list[dict
             child = _child(parent, index, digest, family)
             child["document"] = rewritten
             child["injection_span"] = spans_as(new_pairs, style)
-            rows.append(child)
-    return rows
+            yield child
+
+
+def derive_rows(parents: list[dict[str, Any]], families: list[str]) -> list[dict[str, Any]]:
+    """Materialise :func:`iter_derived`."""
+    return list(iter_derived(parents, families))
 
 
 def _display_path(path: Path, repo_root: Path) -> str:
@@ -151,6 +166,7 @@ def _card_text(
             f"- Reserved families: {reserved}",
             f"- Clean controls whose document text also appears in train: {overlap['train']}",
             f"- Clean controls whose document text also appears in val: {overlap['val']}",
+            f"- Primary rows only: {summary.get('primary_only', False)}",
             "",
             "## Counts by family",
             "",
@@ -173,20 +189,36 @@ def build_from_config(config: dict[str, Any], config_path: Path) -> dict[str, An
 
     families = _parse_families(config.get("families"))
     seed = int(config.get("seed", 20261115))
-    parents = read_jsonl(source)
+    primary_only = bool(config.get("primary_only", False))
     train_path = source.parent / "train.jsonl"
     val_path = source.parent / "val.jsonl"
     if not train_path.is_file() or not val_path.is_file():
         raise FileNotFoundError("train.jsonl and val.jsonl must sit beside test.jsonl for the leakage check")
-    rows = derive_rows(parents, families)
-    summary = validate_obfuscated_split(
-        rows,
-        parents,
-        families=families,
-        train_rows=read_jsonl(train_path),
-        val_rows=read_jsonl(val_path),
-    )
-    write_jsonl(output, rows)
+    print(f"reading parents from {source}", flush=True)
+    parents = select_parents(iter_jsonl(source), primary_only=primary_only)
+    print(f"parents {len(parents)}; indexing train for leakage", flush=True)
+    train_docs, train_hashes = leakage_sets(iter_jsonl(train_path))
+    print(f"indexing val for leakage ({len(train_docs)} distinct train documents)", flush=True)
+    val_docs, val_hashes = leakage_sets(iter_jsonl(val_path))
+    print("writing obfuscated rows", flush=True)
+    checker = ObfuscatedChecker(parents, families, train_docs, val_docs, train_hashes, val_hashes)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    partial = output.with_suffix(output.suffix + ".partial")
+    try:
+        with partial.open("w", encoding="utf-8", newline="\n") as handle:
+            written = 0
+            for child in iter_derived(parents, families):
+                checker.accept(child)
+                handle.write(json.dumps(child, ensure_ascii=False) + "\n")
+                written += 1
+                if written % 20000 == 0:
+                    print(f"validated {written} obfuscated rows", flush=True)
+        summary = checker.finish()
+    except Exception:
+        partial.unlink(missing_ok=True)
+        raise
+    partial.replace(output)
+    summary["primary_only"] = primary_only
     source_sha = hashlib.sha256(source.read_bytes()).hexdigest()
     card_path.write_text(
         _card_text(

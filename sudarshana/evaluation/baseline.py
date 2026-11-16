@@ -54,11 +54,15 @@ class TruncatedLexicalBaseline:
     def fit(self, documents: list[str], labels: list[int]) -> "TruncatedLexicalBaseline":
         if len(documents) != len(labels):
             raise ValueError("documents and labels must have the same length")
+        return self.fit_pairs(zip(documents, labels, strict=True))
+
+    def fit_pairs(self, pairs) -> "TruncatedLexicalBaseline":
+        """Fit from ``(document, label)`` pairs. One pass, so a file can be streamed."""
         positive = Counter()
         negative = Counter()
         n_pos = 0
         n_neg = 0
-        for document, label in zip(documents, labels, strict=True):
+        for document, label in pairs:
             features = _features(truncate_text(document, self.max_tokens))
             if label == 1:
                 positive.update(features)

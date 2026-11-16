@@ -1,0 +1,11 @@
+# Same false-positive cap as configs/calibration_full.yaml, on data/processed.
+target_fpr: 0.05
+target_recall_reference: 0.95
+splits_dir: data/processed
+calibration_split: val
+eval_splits: [test, hard_negatives]
+obfuscated: data/processed/obfuscated.jsonl
+max_tokens: 512
+seed: 2023
+calibration_output: results/calibration_full.json
+output: results/ablation_ladder_full.json

@@ -78,4 +78,6 @@ python -m sudarshana.data.build_obfuscated --config configs/obfuscated_heldout.y
 python scripts/run_p5_eval.py --split test --heldout auto
 ```
 
+The command above rebuilds the prototype set from `data/splits/test.jsonl`. The same builder pointed at `configs/obfuscated_full.yaml` rebuilds the set from `data/processed/test.jsonl` and keeps only primary rows.
+
 `evaluate_heldout` does not build the file. A missing file stays `SKIPPED` with reason `no obfuscated set yet; P1/P2 deliverable`.
