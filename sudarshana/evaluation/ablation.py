@@ -20,8 +20,7 @@ import yaml
 from sudarshana.evaluation.baseline import _git_head
 from sudarshana.evaluation.calibrate import (
     REDACTION_THRESHOLD_NOTE,
-    build_calibration,
-    load_splits,
+    build_calibration_from_paths,
     write_json,
     _repo_root,
     _resolve,
@@ -229,8 +228,9 @@ def run_from_config(config: dict[str, Any], config_path: Path) -> dict[str, Any]
     splits_dir = _resolve(config_path, str(config.get("splits_dir", "data/splits")))
     obfuscated = _resolve(config_path, str(config["obfuscated"])) if config.get("obfuscated") else None
     repo_root = _repo_root(config_path)
-    calibration = build_calibration(
-        load_splits(splits_dir, obfuscated),
+    calibration = build_calibration_from_paths(
+        splits_dir,
+        obfuscated,
         target_fpr=float(config.get("target_fpr", 0.05)),
         max_tokens=int(config.get("max_tokens", 512)),
         seed=int(config.get("seed", 2023)),

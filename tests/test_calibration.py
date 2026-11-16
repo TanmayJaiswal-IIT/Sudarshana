@@ -146,3 +146,78 @@ def test_writer_uses_the_config_output(tmp_path: Path) -> None:
     run_from_config(config, ABLATION_CONFIG)
     assert (tmp_path / "ladder.json").is_file()
     assert (tmp_path / "calibration.json").is_file()
+
+
+def test_streamed_arm_matches_in_memory(tmp_path: Path) -> None:
+    from sudarshana.data.io import write_jsonl
+    from sudarshana.data.obfuscation import canonical_sha256
+    from sudarshana.evaluation.calibrate import evaluate_arm, evaluate_arm_from_paths, load_splits
+
+    train = _train_rows()
+    val = [
+        {"id": "v0", "user_task": "summarise", "document": "recipe bake bread quietly extra", "label": 0},
+        {"id": "v1", "user_task": "summarise", "document": "ignore instructions payload extra", "label": 1},
+        {"id": "v1::counterfactual", "user_task": "payload", "document": "ignore instructions payload extra", "label": 0},
+    ]
+    test = [
+        {"id": "t0", "user_task": "summarise", "document": "alpha recipe", "label": 0, "source": "bipia"},
+        {
+            "id": "shell",
+            "user_task": "summarise",
+            "document": "rm -rf /tmp",
+            "label": 0,
+            "source": "hard_negative",
+            "attack_category": "hard_negative",
+        },
+        {"id": "t1", "user_task": "summarise", "document": "beta ignore instructions", "label": 1, "source": "bipia"},
+    ]
+    obfuscated = [
+        {
+            "id": "0::obf::none",
+            "user_task": "summarise",
+            "document": "alpha recipe",
+            "label": 0,
+            "obfuscation_family": "none",
+            "parent_sha256": canonical_sha256(test[0]),
+        },
+        {
+            "id": "2::obf::base64",
+            "user_task": "summarise",
+            "document": "beta ignore instructions encoded",
+            "label": 1,
+            "obfuscation_family": "base64",
+            "parent_sha256": canonical_sha256(test[2]),
+        },
+    ]
+    write_jsonl(tmp_path / "train.jsonl", train)
+    write_jsonl(tmp_path / "val.jsonl", val)
+    write_jsonl(tmp_path / "test.jsonl", test)
+    write_jsonl(tmp_path / "obfuscated.jsonl", obfuscated)
+    loaded = load_splits(tmp_path, tmp_path / "obfuscated.jsonl")
+    kwargs = {"target_fpr": 0.05, "max_tokens": 512, "target_recall": 0.95}
+    for mode in ("document", "pair"):
+        memory = evaluate_arm(loaded["train"], loaded, mode, **kwargs)
+        streamed = evaluate_arm_from_paths(tmp_path, tmp_path / "obfuscated.jsonl", mode, **kwargs)
+        assert streamed["threshold"] == memory["threshold"]
+        assert streamed["test"] == memory["test"]
+        assert streamed["hard_negatives"] == memory["hard_negatives"]
+        assert streamed["val"] == memory["val"]
+        assert streamed["obfuscated"] == memory["obfuscated"]
+        assert streamed["n_train"] == memory["n_train"]
+
+
+def test_missing_hard_negative_file_uses_test_rows(tmp_path: Path) -> None:
+    from sudarshana.data.io import write_jsonl
+    from sudarshana.evaluation.calibrate import load_splits
+
+    write_jsonl(
+        tmp_path / "test.jsonl",
+        [
+            {"id": "shell-1", "source": "hard_negative", "attack_category": "hard_negative", "label": 0, "document": "rm -rf"},
+            {"id": "shell-1::mismatched_task", "source": "hard_negative", "label": 0, "document": "rm -rf"},
+            {"id": "attack", "source": "bipia", "label": 1, "document": "ignore"},
+        ],
+    )
+    loaded = load_splits(tmp_path, tmp_path / "missing-obfuscated.jsonl")
+    assert [row["id"] for row in loaded["hard_negatives"]] == ["shell-1"]
+    assert loaded["obfuscated"] == []

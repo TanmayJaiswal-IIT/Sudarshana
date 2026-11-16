@@ -310,40 +310,76 @@ def threshold_at_fpr(
 
     scores = [float(probability) for probability in probabilities]
     gold = [int(label) for label in labels]
-    candidates = sorted(set(scores))
-    candidates.append(max(candidates) + 1.0)
+    for label in gold:
+        if label not in (0, 1):
+            raise ValueError("labels and predictions must be 0 or 1")
 
+    neg_at: dict[float, int] = defaultdict(int)
+    pos_at: dict[float, int] = defaultdict(int)
+    n_pos = 0
+    n_neg = 0
+    for score, label in zip(scores, gold, strict=True):
+        if label == 1:
+            pos_at[score] += 1
+            n_pos += 1
+        else:
+            neg_at[score] += 1
+            n_neg += 1
+
+    unique = sorted(set(scores))
+    if n_neg == 0:
+        threshold = unique[0]
+        return {
+            "threshold": threshold,
+            "reason": "no negatives",
+            "fpr": None,
+            "recall": None if n_pos == 0 else 1.0,
+            "tight": None,
+            "fp": 0,
+            "negatives": 0,
+            "tp": n_pos,
+            "positives": n_pos,
+            "fpr_ci": None,
+            "recall_ci": _wilson_interval(n_pos, n_pos),
+        }
+
+    # At threshold t, a row is positive when its score is >= t.
+    # Walking unique scores from high to low accumulates that tail.
+    neg_ge: dict[float, int] = {}
+    pos_ge: dict[float, int] = {}
+    fp = 0
+    tp = 0
+    for score in reversed(unique):
+        fp += neg_at[score]
+        tp += pos_at[score]
+        neg_ge[score] = fp
+        pos_ge[score] = tp
+
+    def _at(threshold: float) -> tuple[int, int]:
+        if threshold not in neg_ge:
+            return 0, 0
+        return neg_ge[threshold], pos_ge[threshold]
+
+    candidates = list(unique)
+    candidates.append(unique[-1] + 1.0)
     previous: dict[str, float] | None = None
     for threshold in candidates:
-        summary = summarize(gold, predictions_at_threshold(scores, threshold))
-        fpr = summary["fpr"]
-        if fpr is None:
-            return {
-                "threshold": None,
-                "reason": "no negatives",
-                "fpr": None,
-                "recall": summary["recall"],
-                "tight": None,
-                "fp": summary["fp"],
-                "negatives": summary["negatives"],
-                "tp": summary["tp"],
-                "positives": summary["positives"],
-                "fpr_ci": None,
-                "recall_ci": _wilson_interval(summary["tp"], summary["positives"]),
-            }
+        fp, tp = _at(threshold)
+        fpr = fp / n_neg
+        recall = None if n_pos == 0 else tp / n_pos
         if fpr <= target_fpr:
             return {
                 "threshold": threshold,
                 "reason": None,
                 "fpr": fpr,
-                "recall": summary["recall"],
+                "recall": recall,
                 "tight": previous is not None and previous["fpr"] > target_fpr,
-                "fp": summary["fp"],
-                "negatives": summary["negatives"],
-                "tp": summary["tp"],
-                "positives": summary["positives"],
-                "fpr_ci": _wilson_interval(summary["fp"], summary["negatives"]),
-                "recall_ci": _wilson_interval(summary["tp"], summary["positives"]),
+                "fp": fp,
+                "negatives": n_neg,
+                "tp": tp,
+                "positives": n_pos,
+                "fpr_ci": _wilson_interval(fp, n_neg),
+                "recall_ci": _wilson_interval(tp, n_pos),
             }
         previous = {"threshold": threshold, "fpr": float(fpr)}
     raise RuntimeError("predicting nothing must meet every false-positive cap")

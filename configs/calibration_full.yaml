@@ -1,0 +1,9 @@
+# Freeze the detection threshold on the authoritative validation split.
+# Test, held-out hard negatives, and the obfuscated set are scored after the threshold is chosen.
+target_fpr: 0.05
+target_recall_reference: 0.95
+splits_dir: data/processed
+obfuscated: data/processed/obfuscated.jsonl
+max_tokens: 512
+seed: 2023
+output: results/calibration_full.json

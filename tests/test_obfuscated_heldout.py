@@ -168,3 +168,15 @@ def test_full_build_eval_and_determinism(tmp_path: Path) -> None:
     assert skipped["reason"] == "no obfuscated set yet; P1/P2 deliverable"
     assert "SKIPPED" in format_heldout_section(skipped)
     assert "base64" in format_heldout_section(result)
+
+
+def test_primary_only_drops_sibling_rows() -> None:
+    from sudarshana.data.build_obfuscated import select_parents
+
+    rows = [
+        {"id": "parent", "label": 1},
+        {"id": "parent::counterfactual", "label": 0},
+        {"id": "hn::mismatched_task", "label": 0},
+    ]
+    assert [row["id"] for row in select_parents(rows, primary_only=True)] == ["parent"]
+    assert len(select_parents(rows, primary_only=False)) == 3

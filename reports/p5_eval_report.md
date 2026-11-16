@@ -490,7 +490,7 @@ Available arms use the same cap on their own. They are not incremental ladder ga
 | Model-forward latency | RESOLVED — table_3_8 ingested (team-reported) | P3 | results/table_3_8_latency.json |
 | Trained token-head weights | BLOCKED — no weight files in repo | P4 | token_head metrics N/A |
 | Real LLM ASR | N/A — no LLM endpoint | All | PSR proxy used instead |
-| Full splits re-eval (n=206 vs n=42999) | OPEN — splits differ; not comparable | P1/P2 | team baseline n=42999 |
+| Full splits re-eval (n=206 vs n=42999) | RESOLVED — lexical 5% FPR, primary test n=42999 | P1 | results/calibration_full.json; P5 n=206 stays a separate corpus |
 | token_head re-eval | BLOCKED — weights absent | P4 | span-F1 and PSR N/A |
 
 ---

@@ -1,0 +1,14 @@
+# Obfuscated held-out set for the authoritative processed test split.
+# Sibling rows (counterfactual, mismatched task) are excluded.
+# Training must not read the output. homoglyph is reserved from training augmentation.
+source: data/processed/test.jsonl
+output: data/processed/obfuscated.jsonl
+card: reports/obfuscated_full_card.md
+primary_only: true
+seed: 20261115
+families:
+  - base64
+  - hex
+  - leetspeak
+  - zero_width
+  - homoglyph
